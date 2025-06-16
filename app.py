@@ -4,6 +4,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 
 # Configure logging
@@ -34,6 +35,9 @@ login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
+
 with app.app_context():
     # Import models to ensure they're registered with SQLAlchemy
     from models import User, Student, Faculty, Course, Attendance, AbsenceRequest
@@ -51,3 +55,6 @@ with app.app_context():
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+
+if __name__ == '__main__':
+    app.run(debug=True)

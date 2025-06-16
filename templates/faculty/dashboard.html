@@ -78,20 +78,20 @@
                     {% endif %}
                     
                     {% for course in courses %}
-                        {% if course_stats[course.id].below_threshold > 0 %}
+                        {% if course_stats[course.id]['below_threshold'] > 0 %}
                             <a href="{{ url_for('attendance_reports') }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
-                                        {{ course_stats[course.id].below_threshold }} students below attendance threshold in {{ course.title }}
+                                        {{ course_stats[course.id]['below_threshold'] }} students below attendance threshold in {{ course.title }}
                                     </div>
-                                    <span class="badge bg-warning rounded-pill">{{ course_stats[course.id].below_threshold }}</span>
+                                    <span class="badge bg-warning rounded-pill">{{ course_stats[course.id]['below_threshold'] }}</span>
                                 </div>
                             </a>
                         {% endif %}
                     {% endfor %}
                     
-                    {% if pending_requests == 0 and not any(course_stats[course.id].below_threshold > 0 for course in courses) %}
+                    {% if no_actions_needed %}
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle me-2"></i> No pending actions needed.
                         </div>
@@ -121,9 +121,9 @@
                                     <div class="card-body">
                                         <p><strong>Schedule:</strong> {{ course.schedule }}</p>
                                         <p><strong>Location:</strong> {{ course.location }}</p>
-                                        <p><strong>Attendance Rate:</strong> {{ course_stats[course.id].attendance_rate }}%</p>
-                                        <p><strong>Students:</strong> {{ course_stats[course.id].student_count }}</p>
-                                        <p><strong>Sessions:</strong> {{ course_stats[course.id].sessions_count }}</p>
+                                        <p><strong>Attendance Rate:</strong> {{ course_stats[course.id]['attendance_rate'] }}%</p>
+                                        <p><strong>Students:</strong> {{ course_stats[course.id]['student_count'] }}</p>
+                                        <p><strong>Sessions:</strong> {{ course_stats[course.id]['sessions_count'] }}</p>
                                     </div>
                                     <div class="card-footer">
                                         <div class="btn-group w-100">

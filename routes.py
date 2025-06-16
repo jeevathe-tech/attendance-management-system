@@ -260,7 +260,6 @@ def register_routes(app):
                               requests=requests,
                               view_only=True)
 
-    # Faculty routes
     @app.route('/faculty/dashboard')
     @login_required
     def faculty_dashboard():
@@ -274,31 +273,32 @@ def register_routes(app):
         
         courses = Course.query.filter_by(faculty_id=faculty.id).all()
         
-        # Get today's sessions
         today = date.today()
         today_sessions = CourseSession.query.join(Course).filter(
             Course.faculty_id == faculty.id,
             CourseSession.session_date == today
         ).order_by(CourseSession.start_time).all()
         
-        # Get pending absence requests
         pending_requests = AbsenceRequest.query.join(Course).filter(
             Course.faculty_id == faculty.id,
             AbsenceRequest.status == 'pending'
         ).count()
         
-        # Get course stats
         course_stats = {}
         for course in courses:
             stats = get_attendance_stats(course.id)
             course_stats[course.id] = stats
         
+        # Fix: Use dictionary key access instead of attribute access
+        no_actions_needed = pending_requests == 0 and not any(course_stats[course.id]['below_threshold'] > 0 for course in courses)
+        
         return render_template('faculty/dashboard.html',
-                              faculty=faculty,
-                              courses=courses,
-                              today_sessions=today_sessions,
-                              pending_requests=pending_requests,
-                              course_stats=course_stats)
+                            faculty=faculty,
+                            courses=courses,
+                            today_sessions=today_sessions,
+                            pending_requests=pending_requests,
+                            course_stats=course_stats,
+                            no_actions_needed=no_actions_needed)
 
     @app.route('/faculty/course_management', methods=['GET', 'POST'])
     @login_required
@@ -380,6 +380,27 @@ def register_routes(app):
         flash('Course has been deleted!', 'success')
         return redirect(url_for('course_management'))
 
+        @app.route('/faculty/delete_course/<int:course_id>', methods=['POST'])
+        @login_required
+        def delete_course(course_id):
+            if current_user.user_type != 'faculty':
+                flash('Access denied', 'danger')
+                return redirect(url_for('index'))
+            
+            faculty = Faculty.query.filter_by(user_id=current_user.id).first()
+            course = Course.query.get_or_404(course_id)
+            
+            if course.faculty_id != faculty.id:
+                flash('You do not have permission to delete this course', 'danger')
+                return redirect(url_for('course_management'))
+            
+            db.session.delete(course)
+            db.session.commit()
+            flash('Course has been deleted!', 'success')
+            return redirect(url_for('course_management'))
+
+    from datetime import date  # Already imported, just verifying
+
     @app.route('/faculty/course/<int:course_id>/sessions', methods=['GET', 'POST'])
     @login_required
     def course_sessions(course_id):
@@ -412,11 +433,15 @@ def register_routes(app):
         
         sessions = CourseSession.query.filter_by(course_id=course.id).order_by(CourseSession.session_date, CourseSession.start_time).all()
         
+        # Add the current date to the template context
+        today = date.today()
+        
         return render_template('faculty/course_management.html',
-                              form=form,
-                              course=course,
-                              sessions=sessions,
-                              sessions_view=True)
+                            form=form,
+                            course=course,
+                            sessions=sessions,
+                            sessions_view=True,
+                            today=today)  # Pass today to the template
 
     @app.route('/faculty/student_management/<int:course_id>', methods=['GET'])
     @login_required

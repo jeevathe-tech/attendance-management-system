@@ -66,7 +66,6 @@
                                             <td>{{ session.start_time.strftime('%I:%M %p') }} - {{ session.end_time.strftime('%I:%M %p') }}</td>
                                             <td>{{ session.title or 'Regular class' }}</td>
                                             <td>
-                                                {% set today = now().date() %}
                                                 {% if session.session_date > today %}
                                                     <span class="badge bg-info">Upcoming</span>
                                                 {% elif session.session_date == today %}
@@ -153,6 +152,7 @@
                         </div>
                     </div>
                 {% else %}
+                    <!-- Rest of the template unchanged -->
                     <form method="POST" action="{{ url_for('edit_course', course_id=course.id) if edit_mode else url_for('course_management') }}">
                         {{ form.hidden_tag() }}
                         
